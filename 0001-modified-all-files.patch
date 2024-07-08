@@ -1,0 +1,141 @@
+From 6a0e836feddb71efe06babb79f065409007f5427 Mon Sep 17 00:00:00 2001
+From: kwakuduah12 <pdegraft@stetson.edu>
+Date: Mon, 8 Jul 2024 10:33:15 -0400
+Subject: [PATCH] modified all files
+
+---
+ client3.py     | 11 ++++++++---
+ client_test.py | 11 +++++------
+ server3.py     |  9 ---------
+ 3 files changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/client3.py b/client3.py
+index 3fc09b7..ca310d8 100644
+--- a/client3.py
++++ b/client3.py
+@@ -35,14 +35,17 @@ def getDataPoint(quote):
+     stock = quote['stock']
+     bid_price = float(quote['top_bid']['price'])
+     ask_price = float(quote['top_ask']['price'])
+-    price = bid_price
++    price = (bid_price + ask_price) / 2
+     return stock, bid_price, ask_price, price
+ 
+ 
+ def getRatio(price_a, price_b):
+     """ Get ratio of price_a and price_b """
+     """ ------------- Update this function ------------- """
+-    return 1
++    if price_b == 0:
++        return
++    else:
++        return price_a / price_b
+ 
+ 
+ # Main
+@@ -52,8 +55,10 @@ if __name__ == "__main__":
+         quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
+ 
+         """ ----------- Update to get the ratio --------------- """
++        prices = {}
+         for quote in quotes:
+             stock, bid_price, ask_price, price = getDataPoint(quote)
++            prices[stock] = price
+             print("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
+ 
+-        print("Ratio %s" % getRatio(price, price))
++        print("Ratio %s" % getRatio(prices["ABC"], prices["DEF"]))
+diff --git a/client_test.py b/client_test.py
+index af2bf26..716db1a 100644
+--- a/client_test.py
++++ b/client_test.py
+@@ -7,19 +7,18 @@ class ClientTest(unittest.TestCase):
+       {'top_ask': {'price': 121.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
+       {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+     ]
+-    """ ------------ Add the assertion below ------------ """
++    for quote in quotes:
++      self.assertEqual(getDataPoint(quote), (quote['stock'], quote['top_bid']['price'], quote['top_ask']['price'], (quote['top_bid']['price'] + quote['top_ask']['price'])/2))
+ 
+   def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
+     quotes = [
+       {'top_ask': {'price': 119.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
+       {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+     ]
+-    """ ------------ Add the assertion below ------------ """
+-
+-
+-  """ ------------ Add more unit tests ------------ """
++    for quote in quotes:
++      self.assertEqual(getDataPoint(quote), (quote['stock'], quote['top_bid']['price'], quote['top_ask']['price'], (quote['top_bid']['price'] + quote['top_ask']['price'])/2))
+ 
+ 
+ 
+ if __name__ == '__main__':
+-    unittest.main()
++    unittest.main()
+\ No newline at end of file
+diff --git a/server3.py b/server3.py
+index 1836de2..3fdc4f9 100644
+--- a/server3.py
++++ b/server3.py
+@@ -36,7 +36,6 @@ import dateutil.parser
+ ################################################################################
+ #
+ # Config
+-
+ # Sim params
+ 
+ REALTIME = True
+@@ -86,7 +85,6 @@ def orders(hist):
+         size = int(abs(normalvariate(0, 100)))
+         yield t, stock, side, order, size
+ 
+-
+ ################################################################################
+ #
+ # Order Book
+@@ -98,7 +96,6 @@ def add_book(book, order, size, _age=10):
+         if age > 0:
+             yield o, s, age - 1
+ 
+-
+ def clear_order(order, size, book, op=operator.ge, _notional=0):
+     """ Try to clear a sized order against a book, returning a tuple of
+         (notional, new_book) if successful, and None if not.  _notional is a
+@@ -113,7 +110,6 @@ def clear_order(order, size, book, op=operator.ge, _notional=0):
+         elif len(tail) > 0:
+             return clear_order(order, -sdiff, tail, op, _notional)
+ 
+-
+ def clear_book(buy=None, sell=None):
+     """ Clears all crossed orders from a buy and sell book, returning the new
+         books uncrossed.
+@@ -183,11 +179,9 @@ def route(path):
+     """ Decorator for a simple bottle-like web framework.  Routes path to the
+         decorated method, with the rest of the path as an argument.
+     """
+-
+     def _route(f):
+         setattr(f, '__route__', path)
+         return f
+-
+     return _route
+ 
+ 
+@@ -327,12 +321,9 @@ class App(object):
+                     'size': asks2[0][1]
+                 }
+             }]
+-
+-
+ ################################################################################
+ #
+ # Main
+-
+ if __name__ == '__main__':
+     if not os.path.isfile('test.csv'):
+         print("No data found, generating...")
+-- 
+2.44.0
+
