@@ -36,7 +36,6 @@ import dateutil.parser
 ################################################################################
 #
 # Config
-
 # Sim params
 
 REALTIME = True
@@ -86,7 +85,6 @@ def orders(hist):
         size = int(abs(normalvariate(0, 100)))
         yield t, stock, side, order, size
 
-
 ################################################################################
 #
 # Order Book
@@ -97,7 +95,6 @@ def add_book(book, order, size, _age=10):
     for o, s, age in book:
         if age > 0:
             yield o, s, age - 1
-
 
 def clear_order(order, size, book, op=operator.ge, _notional=0):
     """ Try to clear a sized order against a book, returning a tuple of
@@ -112,7 +109,6 @@ def clear_order(order, size, book, op=operator.ge, _notional=0):
             return _notional, list(add_book(tail, top_order, sdiff, age))
         elif len(tail) > 0:
             return clear_order(order, -sdiff, tail, op, _notional)
-
 
 def clear_book(buy=None, sell=None):
     """ Clears all crossed orders from a buy and sell book, returning the new
@@ -183,11 +179,9 @@ def route(path):
     """ Decorator for a simple bottle-like web framework.  Routes path to the
         decorated method, with the rest of the path as an argument.
     """
-
     def _route(f):
         setattr(f, '__route__', path)
         return f
-
     return _route
 
 
@@ -327,12 +321,9 @@ class App(object):
                     'size': asks2[0][1]
                 }
             }]
-
-
 ################################################################################
 #
 # Main
-
 if __name__ == '__main__':
     if not os.path.isfile('test.csv'):
         print("No data found, generating...")
